@@ -8,16 +8,14 @@ def parser(command_input):
 
 def input_error(func):
     def inner(data):
-        if func.__name__ in ('add', 'change'):
-            try:
-                return func(data)
-            except:
-                return 'With this command you should enter contact name and phone number.'
-        if func.__name__ in ('phone'):
-            try:
-                return func(data)
-            except:
-                return 'With this command you should enter contact name.'
+        try:
+            return func(data)
+        except ValueError as exception:
+            return exception.args[0]
+        except KeyError as exception:
+            return exception.args[0]
+        except IndexError:
+            return 'With this command you should enter contact name and phone number or contact name.'
     return inner
 
 
@@ -26,28 +24,35 @@ def hello():
 
 @input_error
 def add(data):
-    if data[0] not in contacts.keys():
-        contacts[data[0]] = data[1]
-        message = f'Contact {data[0].title()} with phone {data[1]} was successfully added.'
-        return message
-    else:
-        return 'Contact already exists.'
+    if data[0].isnumeric():
+        raise ValueError('Name should be a string.')
+    if data[0] in contacts:
+        raise KeyError('Contact already exists.')
+    if not data[1].isnumeric():
+        raise ValueError('Phone should be a number.')
+    contacts[data[0]] = data[1]
+    message = f'Contact {data[0].title()} with phone {data[1]} was successfully added.'
+    return message
 
 @input_error
 def change(data):
-    if data[0] in contacts.keys():
-        contacts[data[0]] = data[1]
-        message = f'Contact {data[0].title()} was successfully updated with phone {data[1]}.'
-        return message
-    else:
-        return 'There is no such contact.'
+    if data[0].isnumeric():
+        raise ValueError('Name should be a string.')
+    if data[0] not in contacts:
+        raise KeyError('There is no such contact.')
+    if not data[1].isnumeric():
+        raise ValueError('Phone should be a number.')
+    contacts[data[0]] = data[1]
+    message = f'Contact {data[0].title()} was successfully updated with phone {data[1]}.'
+    return message
 
 @input_error
 def phone(data):
-    if data[0] in contacts.keys():
-        return f'{contacts[data[0]]}'
-    else:
-        return 'There is no such contact.'
+    if data[0].isnumeric():
+        raise ValueError('Name should be a string.')
+    if data[0] not in contacts:
+        raise KeyError('There is no such contact.')
+    return f'{contacts[data[0]]}'
 
 def show():
     if len(contacts):
